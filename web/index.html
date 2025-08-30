@@ -1,2 +1,63 @@
-<!doctype html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Hospital Coordination</title></head>
-<body><div id="root"></div><script>window.API_URL=""</script><script type="module" src="/src/main.jsx"></script></body></html>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Senior Team – Web</title>
+    <style>
+      body { font-family: system-ui, Arial; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+      input,button,textarea { font-size: 1rem; padding: .5rem; }
+      .row { display:flex; gap: .5rem; margin:.5rem 0; flex-wrap: wrap; }
+      .card { border:1px solid #ddd; padding:1rem; margin:.5rem 0; border-radius:8px; }
+      code { background:#f5f5f5; padding:.1rem .3rem; border-radius:4px; }
+    </style>
+  </head>
+  <body>
+    <h1>Senior Team – Web</h1>
+    <div class="card">
+      <div class="row">
+        <label>API URL: <input id="api" placeholder="https://your-backend.replit.dev" size="40"/></label>
+      </div>
+      <div class="row">
+        <input id="email" placeholder="email"/> 
+        <input id="password" placeholder="password" type="password"/>
+        <select id="role"><option>resident</option><option>senior</option></select>
+        <button onclick="register()">Register</button>
+        <button onclick="login()">Login</button>
+      </div>
+      <div>Token: <code id="tok"></code></div>
+    </div>
+
+    <div class="card">
+      <h3>Patients</h3>
+      <div class="row">
+        <input id="pname" placeholder="name"/>
+        <button onclick="addPatient()">Add</button>
+        <button onclick="listPatients()">List</button>
+      </div>
+      <pre id="out"></pre>
+    </div>
+
+    <script>
+      let token = "";
+      function apiBase(){ return document.getElementById('api').value.trim(); }
+      function out(t){ document.getElementById('out').textContent = typeof t === 'string' ? t : JSON.stringify(t,null,2); }
+      async function register(){
+        const r = await fetch(apiBase()+"/api/auth/register",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.value,password:password.value,role:role.value})});
+        out(await r.json());
+      }
+      async function login(){
+        const r = await fetch(apiBase()+"/api/auth/login",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.value,password:password.value})});
+        const j = await r.json(); token = j.token || ""; document.getElementById('tok').textContent = token.slice(0,24)+"..."; out(j);
+      }
+      async function addPatient(){
+        const r = await fetch(apiBase()+"/api/patients",{method:"POST",headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({name:pname.value})});
+        out(await r.json());
+      }
+      async function listPatients(){
+        const r = await fetch(apiBase()+"/api/patients",{headers:{'Authorization':'Bearer '+token}});
+        out(await r.json());
+      }
+    </script>
+  </body>
+</html>

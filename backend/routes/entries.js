@@ -1,23 +1,25 @@
 import express from "express";
-import { pool } from "../config/db.js";
-import { auth } from "../middleware/auth.js";
+import { supabase } from "../config/db.js";
+
 const router = express.Router();
-router.post("/:patientId", auth, async (req,res) => {
-  const section = (req.query.section || "").toLowerCase();
-  if (!["history","examination","investigation","treatment"].includes(section)) return res.status(400).json({ error:"invalid section" });
-  const { content } = req.body; if (!content) return res.status(400).json({ error:"content required" });
-  try {
-    const r = await pool.query("INSERT INTO patient_entries(patient_id,section,content,created_by) VALUES ($1,$2,$3,$4) RETURNING *",[req.params.patientId,section,content,req.user.id]);
-    res.status(201).json(r.rows[0]);
-  } catch (e) { console.error(e); res.status(500).json({ error:"Server error" }); }
+
+router.post(":patientId", async (req, res) => {
+  const patient_id = req.params.patientId;
+  const { type, text, date=null, author=null } = req.body;
+  const valid = ["history", "examination", "investigations", "treatments"];
+  if (!valid.includes(type)) return res.status(400).json({ error: "invalid type" });
+  const { data, error } = await supabase.from("patient_entries")
+    .insert([{ patient_id, type, text, date, author }]).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
-router.get("/:patientId", auth, async (req,res) => {
-  const section = (req.query.section || "").toLowerCase();
-  try {
-    const q = section
-      ? ["SELECT * FROM patient_entries WHERE patient_id=$1 AND section=$2 ORDER BY id DESC",[req.params.patientId, section]]
-      : ["SELECT * FROM patient_entries WHERE patient_id=$1 ORDER BY id DESC",[req.params.patientId]];
-    const r = await pool.query(q[0], q[1]); res.json(r.rows);
-  } catch (e) { console.error(e); res.status(500).json({ error:"Server error" }); }
+
+router.get(":patientId", async (req, res) => {
+  const patient_id = req.params.patientId;
+  const { data, error } = await supabase.from("patient_entries").select("*")
+    .eq("patient_id", patient_id).order("date", { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
+
 export default router;
