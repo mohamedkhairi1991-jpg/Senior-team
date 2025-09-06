@@ -11,21 +11,41 @@ import patientRoutes from './routes/patients';
 
 // Initialize express app
 const app = express();
+// Track server start time for uptime calculations
 const startTime = Date.now();
 
+// Define allowed origins
+const allowedOrigins = [
+  "http://localhost:5173", // Local development frontend
+  /\.app\.github\.dev$/ // GitHub Codespaces preview URLs
+];
+
 // Middleware
-app.use(helmet());
-app.use(cors());
+// Apply security headers
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false
+}));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.some(a => (a instanceof RegExp ? a.test(origin) : a === origin))) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  }
+}));
 app.use(pino);
 app.use(express.json());
 
 // Health check endpoint
 app.get('/healthz', (req: Request, res: Response) => {
-  const uptime = process.uptime();
+  // Calculate uptime based on our startTime variable
+  const uptime = Math.floor((Date.now() - startTime) / 1000);
   res.status(200).json({
     status: 'ok',
     uptime,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.2.1'
   });
 });
 
@@ -39,13 +59,22 @@ app.use((req: Request, res: Response) => {
 });
 
 // Centralized error handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
   res.status(500).json({
     error: 'Internal Server Error',
     message: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message
   });
 });
+
+// Load environment variables (if not already loaded elsewhere)
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    require('dotenv').config();
+  } catch (err) {
+    console.warn('Failed to load .env file, using default environment variables');
+  }
+}
 
 // Server setup
 const PORT = process.env.PORT || 3001;
