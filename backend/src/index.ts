@@ -5,6 +5,10 @@ import { Server } from 'http';
 // Import pino-http using require to avoid TypeScript issues
 const pino = require('pino-http')();
 
+// Import routes
+import authRoutes from './routes/auth';
+import patientRoutes from './routes/patients';
+
 // Initialize express app
 const app = express();
 const startTime = Date.now();
@@ -24,6 +28,10 @@ app.get('/healthz', (req: Request, res: Response) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Mount routes
+app.use('/auth', authRoutes);
+app.use('/patients', patientRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
