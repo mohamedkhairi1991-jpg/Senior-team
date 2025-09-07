@@ -45,19 +45,8 @@ app.use((0, cors_1.default)({
 }));
 app.use(pino);
 app.use(express_1.default.json());
-// Root endpoint
-app.get('/', (req, res) => {
-    res.json({
-        message: '✅ Hospital Coordination Backend is running!',
-        endpoints: {
-            health: '/healthz',
-            auth: '/auth',
-            patients: '/patients'
-        }
-    });
-});
-// Health check endpoint
-app.get('/healthz', (req, res) => {
+// Health check endpoint  
+app.get('/api/healthz', (req, res) => {
     // Calculate uptime based on our startTime variable
     const uptime = Math.floor((Date.now() - startTime) / 1000);
     res.status(200).json({
@@ -67,18 +56,20 @@ app.get('/healthz', (req, res) => {
         version: process.env.npm_package_version || '1.2.1'
     });
 });
-// Mount routes
-app.use('/auth', auth_1.default);
-app.use('/patients', patients_1.default);
-// Serve static files from React build in production
-if (process.env.NODE_ENV === 'production') {
-    const frontendPath = path_1.default.join(__dirname, '../../web/dist');
-    app.use(express_1.default.static(frontendPath));
-    // Handle React Router (return index.html for all routes)
-    app.get('*', (req, res) => {
-        res.sendFile(path_1.default.join(frontendPath, 'index.html'));
-    });
-}
+// Mount API routes with /api prefix
+app.use('/api/auth', auth_1.default);
+app.use('/api/patients', patients_1.default);
+// Serve static files from React build
+const frontendPath = path_1.default.join(__dirname, '../../web/dist');
+app.use(express_1.default.static(frontendPath));
+// Handle React Router (return index.html for all routes that aren't API)
+app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    res.sendFile(path_1.default.join(frontendPath, 'index.html'));
+});
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({ error: 'Not Found' });
