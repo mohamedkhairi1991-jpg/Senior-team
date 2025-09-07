@@ -6,7 +6,7 @@ import Login from './pages/Login'
 import Patients from './pages/Patients'
 import './index.css'
 
-function Guard({children}:{children:JSX.Element}){
+function Guard({children}:{children:React.ReactElement}){
   return localStorage.getItem('token') ? children : <Navigate to="/login" replace/>
 }
 
