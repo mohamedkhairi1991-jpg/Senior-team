@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import { Server } from 'http';
+import path from 'path';
 // Import pino-http using require to avoid TypeScript issues
 const pino = require('pino-http')();
 
@@ -60,6 +61,17 @@ app.get('/healthz', (req: Request, res: Response) => {
 // Mount routes
 app.use('/auth', authRoutes);
 app.use('/patients', patientRoutes);
+
+// Serve static files from React build in production
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../../web/dist');
+  app.use(express.static(frontendPath));
+  
+  // Handle React Router (return index.html for all routes)
+  app.get('*', (req: Request, res: Response) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+}
 
 // 404 handler
 app.use((req: Request, res: Response) => {
