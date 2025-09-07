@@ -27,13 +27,8 @@ app.use(helmet({
   contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false
 }));
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.some(a => (a instanceof RegExp ? a.test(origin) : a === origin))) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  }
+  origin: true, // Allow all origins for development
+  credentials: true
 }));
 app.use(pino);
 app.use(express.json());
