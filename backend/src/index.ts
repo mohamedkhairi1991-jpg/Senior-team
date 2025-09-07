@@ -16,7 +16,8 @@ const startTime = Date.now();
 
 // Define allowed origins
 const allowedOrigins = [
-  "http://localhost:5173", // Local development frontend
+  "http://localhost:5173", // Local development frontend (default Vite port)
+  "http://localhost:5000", // Local development frontend (custom port)
   /\.app\.github\.dev$/ // GitHub Codespaces preview URLs
 ];
 
