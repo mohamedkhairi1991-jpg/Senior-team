@@ -25,7 +25,19 @@ const allowedOrigins = [
 // Middleware
 // Apply security headers
 app.use((0, helmet_1.default)({
-    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'", "https:", "data:"],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'none'"],
+        },
+    },
 }));
 app.use((0, cors_1.default)({
     origin: true, // Allow all origins for development
