@@ -33,6 +33,18 @@ app.use(cors({
 app.use(pino);
 app.use(express.json());
 
+// Root endpoint
+app.get('/', (req: Request, res: Response) => {
+  res.json({ 
+    message: '✅ Hospital Coordination Backend is running!',
+    endpoints: {
+      health: '/healthz',
+      auth: '/auth',
+      patients: '/patients'
+    }
+  });
+});
+
 // Health check endpoint
 app.get('/healthz', (req: Request, res: Response) => {
   // Calculate uptime based on our startTime variable
